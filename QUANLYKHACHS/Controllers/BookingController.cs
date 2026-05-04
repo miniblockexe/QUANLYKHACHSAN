@@ -133,8 +133,9 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("{id}/checkout")]
-    public async Task<IActionResult> CheckOut(int id)
+    public async Task<IActionResult> CheckOut(int id, [FromBody] CheckoutRequestDto? request = null)
     {
+        var paymentMethod = request?.PaymentMethod ?? "cash";
         var booking = await _context.Bookings
             .Include(b => b.Room).ThenInclude(r => r.LoaiPhongNavigation)
             .Include(b => b.Customer)
@@ -172,13 +173,46 @@ public class BookingController : ControllerBase
 
             decimal servicesTotal = booking.SeviceOrders.Sum(so => (so.PriceAtOrder ?? 0) * (so.Quantity ?? 0));
 
-            booking.TotalRoomRice = roomTotal + servicesTotal;
+            //booking.TotalRoomRice = roomTotal + servicesTotal;
+            decimal grandTotal = roomTotal + servicesTotal;
+            decimal depositPaid = booking.DepositAmount ?? 0;
+            decimal remaining = grandTotal - depositPaid;
+
+            if (paymentMethod == "balance")
+            {
+                if (!booking.CreatedByUserId.HasValue)
+                    return BadRequest(new { message = "Không tìm thấy tài khoản khách hàng." });
+
+                var user = await _context.Users.FindAsync(booking.CreatedByUserId.Value);
+                if (user == null)
+                    return BadRequest(new { message = "Không tìm thấy tài khoản." });
+                if (user.Balance < remaining)
+                    return BadRequest(new { message = $"Số dư không đủ! Cần {remaining:#,##0} ₫, hiện có {user.Balance:#,##0} ₫." });
+
+                user.Balance -= remaining;
+            }
+
+            booking.TotalRoomRice = grandTotal;
             booking.StatusRoom = "completed";
 
             if (booking.Room != null)
             {
                 booking.Room.TrangThai = "Cleaning";
             }
+            
+            /*
+            if (remaining > 0 && booking.CreatedByUserId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(booking.CreatedByUserId.Value);
+                if (user != null)
+                {
+                    if (user.Balance < remaining)
+                        return BadRequest(new { message = $"Số dư không đủ để thanh toán. Cần {remaining:#,##0} xu, hiện có {user.Balance:#,##0} xu." });
+
+                    user.Balance -= remaining;
+                }
+            }
+            */
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -194,7 +228,11 @@ public class BookingController : ControllerBase
                 UnitName = booking.IsHourly ? "Giờ" : "Ngày",
                 RoomPrice = roomTotal,
                 ServicesTotal = servicesTotal,
-                GrandTotal = booking.TotalRoomRice ?? 0,
+                DepositPaid = depositPaid,
+                RemainingCharged = remaining,
+                //GrandTotal = booking.TotalRoomRice ?? 0,
+                GrandTotal = grandTotal,
+                PaymentMethod = paymentMethod,
                 Details = booking.SeviceOrders.Select(so => new ServiceDetailDto
                 {
                     ServiceName = so.Service?.Servicename ?? "Dịch vụ",
@@ -392,8 +430,16 @@ public class BookingController : ControllerBase
         public string UnitName { get; set; } = ""; 
         public decimal RoomPrice { get; set; }
         public decimal ServicesTotal { get; set; }
+        public decimal DepositPaid { get; set; }
+        public decimal RemainingCharged { get; set; }
         public decimal GrandTotal { get; set; }
+        public string PaymentMethod { get; set; } = "";
         public List<ServiceDetailDto> Details { get; set; } = new();
+    }
+
+    public class CheckoutRequestDto
+    {
+        public string PaymentMethod { get; set; } = "cash";
     }
 
     public class BookWithDepositDto
