@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace QUANLYKHACHS.Models;
+namespace QUANLYKHACHSAN.Models;
 
 [Index("UserName", Name = "UQ__Users__C9F28456561B1F52", IsUnique = true)]
 public partial class User

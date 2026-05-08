@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using QUANLYKHACHS.Data;
+using QUANLYKHACHSAN.Data;
 
 namespace QUANLYKHACHS
 {

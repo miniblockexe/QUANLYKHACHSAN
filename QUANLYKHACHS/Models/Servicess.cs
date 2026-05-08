@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace QUANLYKHACHS.Models;
+namespace QUANLYKHACHSAN.Models;
 
 [Table("Servicess")]
 public partial class Servicess

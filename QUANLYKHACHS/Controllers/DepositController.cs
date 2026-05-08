@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QUANLYKHACHS.Data;
-using QUANLYKHACHS.Models;
+using QUANLYKHACHSAN.Data;
+using QUANLYKHACHSAN.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace QUANLYKHACHS.Models;
+namespace QUANLYKHACHSAN.Models;
 
 [Index("TypeName", Name = "UQ__RoomType__D4E7DFA87E51BE8A", IsUnique = true)]
 public partial class RoomType

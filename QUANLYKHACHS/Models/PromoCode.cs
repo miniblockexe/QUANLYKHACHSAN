@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace QUANLYKHACHS.Models;
+namespace QUANLYKHACHSAN.Models;
 
 [Index("Code", Name = "UQ__PromoCod__A25C5AA70169EC04", IsUnique = true)]
 public partial class PromoCode

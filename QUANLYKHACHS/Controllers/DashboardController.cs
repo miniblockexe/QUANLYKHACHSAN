@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QUANLYKHACHS.Data;
+using QUANLYKHACHSAN.Data;
 
 namespace QUANLYKHACHS.Controllers
 {

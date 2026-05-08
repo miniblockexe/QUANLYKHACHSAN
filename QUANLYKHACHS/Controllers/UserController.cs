@@ -2,12 +2,12 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QUANLYKHACHS.Data;
-using QUANLYKHACHS.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using QUANLYKHACHSAN.Data;
+using QUANLYKHACHSAN.Models;
 
 namespace QUANLYKHACHS.Controllers
 {

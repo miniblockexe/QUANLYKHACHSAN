@@ -1,8 +1,8 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
-using QUANLYKHACHS.Data;
-using QUANLYKHACHS.Models;
 using Microsoft.EntityFrameworkCore;
+using QUANLYKHACHSAN.Data;
+using QUANLYKHACHSAN.Models;
 using System.Threading.Tasks; 
 
 namespace QUANLYKHACHS.Controllers

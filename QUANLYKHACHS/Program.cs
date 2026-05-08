@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using QUANLYKHACHS.Data;
+using QUANLYKHACHSAN.Data;
 using System.Text.Json;
 using System.Text;
 using Microsoft.OpenApi.Models;
