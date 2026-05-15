@@ -120,6 +120,14 @@ public class BookingController : ControllerBase
                 booking.Room.TrangThai = "Occupied";
             }
 
+            var otherPending = await _context.Bookings
+            .Where(b => b.RoomId == booking.RoomId
+                     && b.BookingId != booking.BookingId
+                     && b.StatusRoom == "PendingCash")
+            .ToListAsync();
+
+            foreach (var other in otherPending)
+                other.StatusRoom = "cancelled";
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
@@ -401,8 +409,8 @@ public class BookingController : ControllerBase
             .FirstOrDefaultAsync(r => r.RoomId == dto.RoomId);
 
         if (room == null) return BadRequest(new { message = "Phòng không tồn tại" });
-        if (room.TrangThai != "Available")
-            return BadRequest(new { message = "Phòng không còn trống" });
+        //if (room.TrangThai != "Available")
+        //    return BadRequest(new { message = "Phòng không còn trống" });
 
         if (dto.ExpectedCheckin <= DateTime.Now)
             return BadRequest(new { message = "Ngày hẹn phải là ngày trong tương lai" });
