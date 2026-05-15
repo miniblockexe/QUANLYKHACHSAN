@@ -29,12 +29,12 @@ public class CustomersController : ControllerBase
                     c.Cccd,
                     c.Sdt,
                     RoomNumber = _context.Bookings
-                        .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved"))
+                        .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved" || b.StatusRoom == "PendingCash"))
                         .OrderByDescending(b => b.BookingId) 
                         .Select(b => b.Room.SoPhong)
                         .FirstOrDefault(),
                     BookingStatus = _context.Bookings
-                        .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved"))
+                        .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved" || b.StatusRoom == "PendingCash"))
                         .OrderByDescending(b => b.BookingId)
                         .Select(b => b.StatusRoom)
                         .FirstOrDefault()
@@ -87,13 +87,13 @@ public class CustomersController : ControllerBase
                 c.Cccd,
                 c.Sdt,
                 RoomNumber = _context.Bookings
-                    .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved"))
+                    .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved" || b.StatusRoom == "PendingCash"))
                     .OrderByDescending(b => b.BookingId)
                     .Select(b => b.Room.SoPhong)
                     .FirstOrDefault(),
 
                 BookingStatus = _context.Bookings
-                    .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved"))
+                    .Where(b => b.CustomerId == c.Customerid && (b.StatusRoom == "active" || b.StatusRoom == "Reserved" || b.StatusRoom == "PendingCash"))
                     .OrderByDescending(b => b.BookingId)
                     .Select(b => b.StatusRoom)
                     .FirstOrDefault()
@@ -190,7 +190,7 @@ public class CustomersController : ControllerBase
         var booking = await _context.Bookings
             .OrderByDescending(b => b.BookingId)
             .FirstOrDefaultAsync(b => b.CustomerId == customerId &&
-                                     (b.StatusRoom == "active" || b.StatusRoom == "Reserved"));
+                                     (b.StatusRoom == "active" || b.StatusRoom == "Reserved" || b.StatusRoom == "PendingCash"));
 
         if (booking == null)
         {
