@@ -105,7 +105,7 @@ public class BookingController : ControllerBase
 
         if (booking == null) return NotFound("Không tìm thấy đơn đặt phòng.");
 
-        if (booking.StatusRoom != "Reserved")
+        if (booking.StatusRoom != "Reserved" && booking.StatusRoom != "PendingCash")
             return BadRequest("Đơn đặt phòng này không ở trạng thái chờ nhận phòng.");
 
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -393,6 +393,70 @@ public class BookingController : ControllerBase
         }
     }
 
+    [HttpPost("book-cash-reserve")]
+    public async Task<IActionResult> BookCashReserve([FromBody] BookCashReserveDto dto)
+    {
+        var room = await _context.Rooms
+            .Include(r => r.LoaiPhongNavigation)
+            .FirstOrDefaultAsync(r => r.RoomId == dto.RoomId);
+
+        if (room == null) return BadRequest(new { message = "Phòng không tồn tại" });
+        if (room.TrangThai != "Available")
+            return BadRequest(new { message = "Phòng không còn trống" });
+
+        if (dto.ExpectedCheckin <= DateTime.Now)
+            return BadRequest(new { message = "Ngày hẹn phải là ngày trong tương lai" });
+
+        using var tx = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Cccd == dto.Cccd);
+            if (customer == null)
+            {
+                customer = new Customer
+                {
+                    Fullname = dto.Fullname,
+                    Cccd = dto.Cccd,
+                    Sdt = dto.Sdt
+                };
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+            }
+
+            var booking = new Booking
+            {
+                RoomId = dto.RoomId,
+                CustomerId = customer.Customerid,
+                CreatedByUserId = dto.UserId > 0 ? dto.UserId : null,
+                Checkin = dto.ExpectedCheckin,
+                IsHourly = dto.IsHourly,
+                StatusRoom = "PendingCash",  
+                DepositAmount = 0,
+                ExpectedCheckin = dto.ExpectedCheckin,
+                DepositRefunded = false,
+                TotalRoomRice = 0
+            };
+
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return Ok(new
+            {
+                message = "Đặt trước thành công!",
+                bookingId = booking.BookingId,
+                expectedCheckin = dto.ExpectedCheckin,
+                status = "PendingCash"
+            });
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            return StatusCode(500, new { message = "Lỗi hệ thống: " + ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> CancelBooking(int id)
     {
@@ -457,5 +521,15 @@ public class BookingController : ControllerBase
         public string ServiceName { get; set; } = null!;
         public int Quantity { get; set; }
         public decimal Price { get; set; }
+    }
+    public class BookCashReserveDto
+    {
+        public int RoomId { get; set; }
+        public string Fullname { get; set; } = "";
+        public string Cccd { get; set; } = "";
+        public string? Sdt { get; set; }
+        public bool IsHourly { get; set; }
+        public DateTime ExpectedCheckin { get; set; }
+        public int UserId { get; set; } 
     }
 }

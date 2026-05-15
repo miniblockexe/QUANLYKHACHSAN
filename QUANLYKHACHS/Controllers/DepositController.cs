@@ -105,8 +105,8 @@ namespace QUANLYKHACHS.Controllers
                     discountPercent,
                     promoCode       = promo?.Code,
                     note            = promo != null
-                        ? $"Nạp {dto.Amount:#,##0} ₫ → {baseCoins:#,##0} xu + {bonusCoins:#,##0} xu bonus ({discountPercent}%) = {totalCoins:#,##0} xu"
-                        : $"Nạp {dto.Amount:#,##0} ₫ → {totalCoins:#,##0} xu",
+                        ? $"Nạp {dto.Amount:#,##0} ₫ → {baseCoins:#,##0} đ + {bonusCoins:#,##0} đ bonus ({discountPercent}%) = {totalCoins:#,##0} đ"
+                        : $"Nạp {dto.Amount:#,##0} ₫ → {totalCoins:#,##0} đ",
                     createdAt       = deposit.CreatedAt
                 }
             });
@@ -151,7 +151,7 @@ namespace QUANLYKHACHS.Controllers
                 return Ok(new
                 {
                     success = true,
-                    message = $"Duyệt thành công! Đã cộng {totalCoins:#,##0} xu cho {deposit.User.UserName}",
+                    message = $"Duyệt thành công! Đã cộng {totalCoins:#,##0} đ cho {deposit.User.UserName}",
                     data = new
                     {
                         transactionId   = deposit.TransactionId,
@@ -203,7 +203,7 @@ namespace QUANLYKHACHS.Controllers
                 code            = promo.Code,
                 discountPercent = promo.DiscountPercent,
                 description     = promo.Description,
-                message         = $"Mã hợp lệ! Cộng thêm {promo.DiscountPercent}% xu"
+                message         = $"Mã hợp lệ! Cộng thêm {promo.DiscountPercent}% đ"
             });
         }
 
