@@ -37,6 +37,7 @@ public partial class Booking
 
     [Column(TypeName = "datetime")]
     public DateTime? ExpectedCheckin { get; set; }
+    public DateTime? ExpectedCheckout { get; set; }
 
     public bool DepositRefunded { get; set; }
 

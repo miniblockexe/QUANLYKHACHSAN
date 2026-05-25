@@ -298,7 +298,7 @@ public class BookingController : ControllerBase
         decimal priceBase = dto.IsHourly
             ? (room.LoaiPhongNavigation?.GiaTheoGio ?? 0)
             : (room.LoaiPhongNavigation?.GiaTheoDem ?? 0);
-        decimal depositAmount = Math.Round(priceBase * 0.20m, 0);
+        decimal depositAmount = Math.Round(priceBase * 0.30m, 0);
 
         if (user.Balance < depositAmount)
             return BadRequest(new { message = $"Số dư không đủ để đặt cọc. Cần {depositAmount:#,##0} xu, hiện có {user.Balance:#,##0} xu." });
@@ -330,6 +330,7 @@ public class BookingController : ControllerBase
                 StatusRoom = "Reserved",
                 DepositAmount = depositAmount,
                 ExpectedCheckin = dto.ExpectedCheckin,
+                ExpectedCheckout = dto.ExpectedCheckout,
                 DepositRefunded = false,
                 TotalRoomRice = 0
             };
@@ -415,6 +416,11 @@ public class BookingController : ControllerBase
         if (dto.ExpectedCheckin <= DateTime.Now)
             return BadRequest(new { message = "Ngày hẹn phải là ngày trong tương lai" });
 
+        decimal priceBase = dto.IsHourly
+        ? (room.LoaiPhongNavigation?.GiaTheoGio ?? 0)
+        : (room.LoaiPhongNavigation?.GiaTheoDem ?? 0);
+        decimal depositAmount = Math.Round(priceBase * 0.30m, 0);
+
         using var tx = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -440,8 +446,9 @@ public class BookingController : ControllerBase
                 Checkin = dto.ExpectedCheckin,
                 IsHourly = dto.IsHourly,
                 StatusRoom = "PendingCash",  
-                DepositAmount = 0,
+                DepositAmount = depositAmount,
                 ExpectedCheckin = dto.ExpectedCheckin,
+                ExpectedCheckout = dto.ExpectedCheckout,
                 DepositRefunded = false,
                 TotalRoomRice = 0
             };
@@ -455,6 +462,7 @@ public class BookingController : ControllerBase
                 message = "Đặt trước thành công!",
                 bookingId = booking.BookingId,
                 expectedCheckin = dto.ExpectedCheckin,
+                depositAmount = depositAmount,
                 status = "PendingCash"
             });
         }
@@ -480,6 +488,67 @@ public class BookingController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok();
     }
+
+    [HttpGet("admin/schedule")]
+    public async Task<IActionResult> GetSchedule()
+    {
+        var list = await _context.Bookings
+            .Include(b => b.Room)
+            .Include(b => b.Customer)
+            .OrderByDescending(b => b.BookingId)
+            .Select(b => new {
+                b.BookingId,
+                RoomNumber = b.Room.SoPhong,
+                CustomerName = b.Customer.Fullname,
+                b.Checkin,
+                b.Checkout,
+                b.ExpectedCheckin,
+                b.ExpectedCheckout,
+                b.IsHourly,
+                b.StatusRoom,
+                b.DepositAmount,
+                b.TotalRoomRice
+            })
+            .ToListAsync();
+
+        return Ok(list);
+    }
+
+    [HttpPost("{id}/confirm-cash-deposit")]
+    public async Task<IActionResult> ConfirmCashDeposit(int id)
+    {
+        var booking = await _context.Bookings
+            .Include(b => b.Room)
+            .ThenInclude(r => r.LoaiPhongNavigation)
+            .FirstOrDefaultAsync(b => b.BookingId == id);
+
+        if (booking == null) return NotFound("Không tìm thấy đơn đặt phòng.");
+        if (booking.StatusRoom != "PendingCash")
+            return BadRequest("Chỉ xác nhận được đơn đang chờ tiền mặt.");
+
+        using var tx = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            decimal priceBase = booking.IsHourly
+                ? (booking.Room?.LoaiPhongNavigation?.GiaTheoGio ?? 0)
+                : (booking.Room?.LoaiPhongNavigation?.GiaTheoDem ?? 0);
+            booking.DepositAmount = Math.Round(priceBase * 0.30m, 0);
+
+            booking.StatusRoom = "Reserved";
+            booking.Room!.TrangThai = "Reserved";
+
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return Ok(new { message = "Xác nhận đóng cọc thành công!" });
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            return StatusCode(500, "Lỗi: " + ex.Message);
+        }
+    }
+
     public class BookingCreateDto
     {
         public int RoomId { get; set; }
@@ -522,6 +591,7 @@ public class BookingController : ControllerBase
         public string? Sdt { get; set; }
         public bool IsHourly { get; set; }
         public DateTime ExpectedCheckin { get; set; }
+        public DateTime? ExpectedCheckout { get; set; }
     }
 
     public class ServiceDetailDto
@@ -538,6 +608,7 @@ public class BookingController : ControllerBase
         public string? Sdt { get; set; }
         public bool IsHourly { get; set; }
         public DateTime ExpectedCheckin { get; set; }
+        public DateTime? ExpectedCheckout { get; set; }
         public int UserId { get; set; } 
     }
 }

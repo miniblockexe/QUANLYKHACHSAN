@@ -16,7 +16,6 @@ public partial class HotelContext : DbContext
     {
     }
 
-    public virtual DbSet<AppBackground> AppBackgrounds { get; set; }
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
@@ -47,16 +46,7 @@ public partial class HotelContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AppBackground>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__AppBackg__3214EC07A38C6489");
-
-            entity.ToTable("AppBackground", tb => tb.HasTrigger("trg_AppBackground_UpdatedAt"));
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
-            entity.Property(e => e.MimeType).HasDefaultValue("image/svg+xml");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getutcdate())");
-        });
+       
 
         modelBuilder.Entity<Booking>(entity =>
         {
